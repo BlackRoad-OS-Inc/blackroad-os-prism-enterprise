@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import Optional
 
@@ -56,7 +57,6 @@ async def chat(req: ChatRequest):
                 or data.get("text")
             )
             if text is None:
-                import logging
                 logging.getLogger("lucidia.bridge").warning(
                     "Backend response had no recognised text field; fields=%s", list(data.keys())
                 )

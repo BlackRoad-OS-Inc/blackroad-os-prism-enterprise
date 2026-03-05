@@ -18,6 +18,8 @@ const DEFAULT_PERSONA =
   process.env.DEFAULT_PERSONA ||
   'You are a local BlackRoad assistant powered by Ollama. Always ask 1 short follow-up. Be truthful and concise.';
 const MSG_SUFFIX = 'blackboxprogramming|copilot';
+// When LUCIDIA_SEED is unset, dailyCode() returns '' and daily-code auth is disabled;
+// only origin-key auth (ORIGIN_KEY_PATH) will be accepted for non-loopback requests.
 const DEFAULT_SEED = process.env.LUCIDIA_SEED || '';
 
 function readTimeoutEnv(name, fallback) {
