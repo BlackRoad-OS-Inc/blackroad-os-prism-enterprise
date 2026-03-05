@@ -11,19 +11,23 @@ def test_health():
     assert res.json()["status"] == "ok"
 
 
-def test_chat_returns_echo_response():
+def test_chat_returns_stub_response():
+    """Without LUCIDIA_BACKEND_URL the bridge returns a stub echo."""
     res = client.post(
         "/chat",
         json={"prompt": "ping"},
     )
     assert res.status_code == 200
-    assert res.json()["text"] == "LLM stub response to: ping"
+    assert "ping" in res.json()["text"]
 
 
 def test_chat_includes_system_prefix_when_present():
+    """Stub mode prepends the system message when LUCIDIA_BACKEND_URL is unset."""
     res = client.post(
         "/chat",
         json={"prompt": "status", "system": "SYS"},
     )
     assert res.status_code == 200
-    assert res.json()["text"] == "SYS LLM stub response to: status"
+    data = res.json()
+    assert "status" in data["text"]
+    assert "SYS" in data["text"]

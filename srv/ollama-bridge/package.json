@@ -1,7 +1,8 @@
 {
   "name": "ollama-bridge",
+  "version": "0.1.0",
+  "description": "BlackRoad Ollama bridge service",
   "private": true,
-  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -10,19 +11,4 @@
   "dependencies": {
     "express": "^4.19.2"
   }
-}
-
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "version": "1.0.0",
-  "type": "module",
-  "private": true,
-  "dependencies": {
-    "express": "^4.19.2"
-  }
-  "version": "0.1.0",
-  "type": "module",
-  "description": "BlackRoad Ollama bridge service",
-  "main": "server.js"
 }

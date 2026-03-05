@@ -8,28 +8,13 @@ const CONFIG_PATH =
 
 let cache;
 const FALLBACK_PROVIDERS = {
-  openai: { display_name: 'OpenAI', env_key: 'OPENAI_API_KEY' },
-  anthropic: { display_name: 'Anthropic', env_key: 'ANTHROPIC_API_KEY' },
+  lucidia: { display_name: 'Lucidia (self-hosted)', env_key: 'LLM_URL' },
+  blackboxprogramming: { display_name: 'BlackBox Programming (self-hosted)', env_key: 'LLM_URL' },
 };
 
 function loadConfig() {
   if (cache) {
     return cache;
-  if (!cache) {
-    try {
-      const file = fs.readFileSync(CONFIG_PATH, 'utf8');
-      const data = yaml.parse(file);
-      cache =
-        data?.providers && Object.keys(data.providers).length
-          ? data.providers
-          : { ...FALLBACK_PROVIDERS };
-    } catch (err) {
-      console.warn(
-        '[providers] using fallback configuration:',
-        err?.message || err
-      );
-      cache = { ...FALLBACK_PROVIDERS };
-    }
   }
 
   let file;
@@ -37,9 +22,7 @@ function loadConfig() {
     file = fs.readFileSync(CONFIG_PATH, 'utf8');
   } catch (err) {
     if (err.code === 'ENOENT') {
-      cache = {
-        openai: { display_name: 'OpenAI', env_key: 'OPENAI_API_KEY' },
-      };
+      cache = { ...FALLBACK_PROVIDERS };
       return cache;
     }
     throw err;
@@ -49,7 +32,8 @@ function loadConfig() {
   if (file && file.trim()) {
     data = yaml.parse(file) || {};
   }
-  cache = data.providers || {};
+  const providers = data.providers || {};
+  cache = Object.keys(providers).length ? providers : { ...FALLBACK_PROVIDERS };
   return cache;
 }
 

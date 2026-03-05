@@ -33,8 +33,9 @@ def _candidate_urls() -> Iterable[str]:
     env_base = os.getenv("BASE_URL")
     if env_base:
         yield env_base.rstrip("/")
-    yield VLLM_BASE
+    # Prefer local Ollama over any other backend
     yield OLLAMA_BASE
+    yield VLLM_BASE
     if os.getenv("XAI_API_KEY"):
         yield XAI_BASE
 
