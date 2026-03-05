@@ -67,20 +67,6 @@ class BaseBot(ABC):
             "handoffs": list(self.metadata.handoffs),
             "tags": list(self.metadata.tags),
         }
-from abc import ABC, abstractmethod
-from .protocols import Task, BotResponse
-
-
-class BaseBot(ABC):
-    """Abstract base class for bots."""
-
-    name: str
-    mission: str
-
-    @abstractmethod
-    def run(self, task: Task) -> BotResponse:  # pragma: no cover - interface
-        """Run the bot on a task."""
-        raise NotImplementedError
 
 
 def assert_guardrails(response: BotResponse) -> None:
@@ -99,15 +85,6 @@ def assert_guardrails(response: BotResponse) -> None:
         raise AssertionError("Next actions required")
     if response.ok is None:
         raise AssertionError("ok flag required")
-from __future__ import annotations
-
-from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Protocol
-
-
-@dataclass
-class Task:
-    id: str
     goal: str
     context: Dict[str, Any] | None = None
 
