@@ -289,6 +289,7 @@ import lmsQuiz from './routes/lms/quizzes.js';
 import lmsCerts from './routes/lms/certs_policies.js';
 import lmsRC from './routes/lms/reminders_compliance.js';
 import { orgResolver, requireOrg } from './middleware/org.js';
+import { clerkAuth } from './middleware/clerk.js';
 import { requireRole } from './middleware/rbac.js';
 import orgCreate from './routes/orgs/create.js';
 import orgInvite from './routes/orgs/invite.js';
@@ -620,6 +621,8 @@ app.post('/api/search/reindex', reindex);
 app.get('/api/search', cacheHeaders('search'), query);
 // resolve org from header or session
 app.use(orgResolver());
+// validate Clerk JWT when CLERK_ISSUER_URL is configured
+app.use(clerkAuth());
 import metricsRouter from "./routes/metrics.js";
 import sourcesRouter from "./routes/sources.js";
 

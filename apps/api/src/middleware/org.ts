@@ -1,11 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
+
+const DEFAULT_ORG = process.env.BLACKROAD_ORG || 'BlackRoad-OS-Inc';
+
 export function orgResolver(){
   return (req: any, res: Response, next: NextFunction) => {
     const hdr = String(req.headers['x-br-org']||'').trim();
     const sess = (req.session?.orgId) || '';
-    const orgId = hdr || sess || '';
-    if (orgId) (req as any).org = { id: orgId };
-    res.setHeader('X-Org', orgId || 'none');
+    const orgId = hdr || sess || DEFAULT_ORG;
+    (req as any).org = { id: orgId };
+    res.setHeader('X-Org', orgId);
     next();
   };
 }
