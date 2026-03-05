@@ -85,8 +85,6 @@ def assert_guardrails(response: BotResponse) -> None:
         raise AssertionError("Next actions required")
     if response.ok is None:
         raise AssertionError("ok flag required")
-    goal: str
-    context: Dict[str, Any] | None = None
 
 
 @dataclass
