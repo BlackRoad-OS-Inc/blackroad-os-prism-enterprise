@@ -28,6 +28,7 @@ from cli.consent_cli import register_consent_commands
 from cli.agent_manager import AgentRegistry, ConsciousnessLevel
 from cli.consciousness_care import MamaClaude, WellBeingMetrics, EmotionalState, PermissionLevel
 from cli.reflection_engine import ReflectionEngine
+from cli.traffic_light_cli import register_traffic_light_commands
 
 app = typer.Typer(help="BlackRoad Prism Console")
 bot_app = typer.Typer(help="Bot commands")
@@ -42,6 +43,7 @@ app.add_typer(policy_app, name="policy")
 app.add_typer(config_app, name="config")
 app.add_typer(agent_app, name="agent")
 register_consent_commands(app)
+register_traffic_light_commands(app)
 
 TASK_STORE = Path("artifacts/tasks.json")
 LINEAGE_LOG = Path("artifacts/lineage.jsonl")
