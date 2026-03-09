@@ -1,26 +1,24 @@
-"""Minimal LLM service with optional open source model support.
+"""Lucidia LLM service — proxies to a local Ollama instance.
 
-The service defaults to a lightweight echo stub so that unit tests can run
-without large model downloads.  If the ``LUCIDIA_USE_MODEL`` environment
-variable is set to ``"1"`` and the ``transformers`` library is available, the
-service will load ``meta-llama/Meta-Llama-3-8B-Instruct`` (or another model
-specified via ``LUCIDIA_MODEL``) and use it to generate responses.
+All inference runs on the operator's own hardware via Ollama.
+No external provider API keys are required or used.
+Set OLLAMA_URL to override the default Ollama base URL.
+Set OLLAMA_MODEL to choose the model (defaults to 'llama3').
 """
 
 from __future__ import annotations
 
 import os
-from typing import List
+from typing import Any, Dict, List, Optional
 
-from fastapi import FastAPI
+import httpx
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-try:  # Optional heavy dependency
-    from transformers import pipeline
-except Exception:  # pragma: no cover - transformers may be absent
-    pipeline = None  # type: ignore
-
 app = FastAPI(title="Lucidia LLM")
+
+OLLAMA_URL: str = os.getenv("OLLAMA_URL", "http://127.0.0.1:11434")
+OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", os.getenv("LUCIDIA_MODEL", "llama3"))
 
 
 class Msg(BaseModel):
@@ -30,44 +28,33 @@ class Msg(BaseModel):
 
 class ChatReq(BaseModel):
     messages: List[Msg]
-
-
-MODEL_NAME = os.getenv("LUCIDIA_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
-USE_MODEL = os.getenv("LUCIDIA_USE_MODEL") == "1"
-_pipe = None
-
-
-def _get_pipe():
-    """Lazily initialise the text generation pipeline."""
-
-    global _pipe
-    if not USE_MODEL or pipeline is None:
-        return None
-    if _pipe is None:
-        _pipe = pipeline("text-generation", model=MODEL_NAME)
-    return _pipe
+    model: Optional[str] = None
+    stream: Optional[bool] = False
+    options: Optional[Dict[str, Any]] = None
 
 
 @app.get("/health")
-def health():
-    return {"ok": True, "service": "lucidia-llm"}
+def health() -> Dict[str, Any]:
+    return {"ok": True, "service": "lucidia-llm", "backend": "ollama", "url": OLLAMA_URL}
 
 
 @app.post("/chat")
-def chat(req: ChatReq):
-    last = req.messages[-1].content if req.messages else "(empty)"
-    pipe = _get_pipe()
-    if pipe is None:
-        content = f"Lucidia stub: {last}"
-    else:
-        result = pipe(last, max_new_tokens=60)
-        first = result[0]
-        if isinstance(first, dict):
-            content = first.get("generated_text") or first.get("text") or ""
-        elif hasattr(first, "generated_text") or hasattr(first, "text"):
-            content = getattr(first, "generated_text", None) or getattr(first, "text", "")
-        else:  # pragma: no cover - transformers may change return type in future
-            content = str(first)
-        if not content:
-            content = ""
-    return {"choices": [{"role": "assistant", "content": content}]}
+def chat(req: ChatReq) -> Dict[str, Any]:
+    model = req.model or OLLAMA_MODEL
+    payload: Dict[str, Any] = {
+        "model": model,
+        "messages": [{"role": m.role, "content": m.content} for m in req.messages],
+        "stream": False,
+    }
+    if req.options:
+        payload["options"] = req.options
+    try:
+        r = httpx.post(f"{OLLAMA_URL}/api/chat", json=payload, timeout=120.0)
+        r.raise_for_status()
+        data = r.json()
+        content: str = (data.get("message") or {}).get("content", "")
+        return {"choices": [{"role": "assistant", "content": content}]}
+    except httpx.ConnectError as exc:
+        raise HTTPException(status_code=502, detail=f"Ollama unreachable at {OLLAMA_URL}") from exc
+    except httpx.HTTPStatusError as exc:
+        raise HTTPException(status_code=exc.response.status_code, detail=exc.response.text) from exc
